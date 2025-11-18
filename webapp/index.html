@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uz">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Просмотр рекламы</title>
+  <title>Reklamani ko'rish</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body{background:#111;color:#fff;font-family:sans-serif;margin:0;padding:0;text-align:center;display:flex;flex-direction:column;justify-content:space-between;height:100vh}
@@ -17,36 +17,36 @@
 </head>
 <body>
   <div class="screen visible" id="screen1">
-    <h2>🎬 Фильмы 🔥</h2>
-    <p>Видео будет доступно после просмотра рекламы.</p>
-    <button onclick="showAd1()">СМОТРЕТЬ РЕКЛАМУ</button>
-    <div id="status">⏳ Проверка среды...</div>
+    <h2>🎬 Filmlar 🔥</h2>
+    <p>Video reklama ko'rilgandan so'ng mavjud bo'ladi.</p>
+    <button onclick="showAd1()">REKLAMANI KO'RISH</button>
+    <div id="status">⏳ Muhit tekshirilmoqda...</div>
   </div>
 
   <div class="screen" id="screen2">
-    <h3>🔥 Бонус до 10 000₽ новым игрокам</h3>
+    <h3>🔥 Yangi foydalanuvchilarga 10 000₽ gacha bonus</h3>
     <a href="https://youtu.be/dQw4w9WgXcQ" target="_blank">
       <img src="https://media4.giphy.com/media/H7KJGQpgC1YMu1mFOh/giphy.gif" alt="Ad 1">
     </a>
-    <button id="btnAd1" disabled>ПРОДОЛЖИТЬ (15)</button>
+    <button id="btnAd1" disabled>DAVOM ETISH (15)</button>
   </div>
 
   <div class="screen" id="screen3">
-    <h3>💘 Найди свою пару</h3>
+    <h3>💘 Juftingizni toping</h3>
     <a href="https://youtu.be/dQw4w9WgXcQ" target="_blank">
       <img src="https://media1.giphy.com/media/XuFYflRPfOOHDLCtUT/giphy.gif" alt="Ad 2">
     </a>
-    <button id="btnAd2" disabled>ПРОДОЛЖИТЬ (15)</button>
+    <button id="btnAd2" disabled>DAVOM ETISH (15)</button>
   </div>
 
   <div class="screen" id="screen4">
-    <h3>✅ Реклама просмотрена</h3>
-    <p>Секундочку, подтверждаем в чате…</p>
+    <h3>✅ Reklama ko'rildi</h3>
+    <p>Bir soniya, chatda tasdiqlanmoqda…</p>
     <div id="send-status" style="font-size:14px;margin-top:10px;color:#ccc;"></div>
   </div>
 
   <script>
-    // ПУБЛИЧНЫЙ HTTPS URL моего backend из bot.py (например, ngrok/cloudflared/VPS)
+    // Backend uchun ommaviy HTTPS URL (bot.py dan — masalan ngrok/cloudflared/VPS)
     const BACKEND_URL = "https://ddfd8b01739b.ngrok-free.app/webapp/done"; // <= ЗАМЕНИ
 
     const p = new URLSearchParams(location.search);
@@ -54,7 +54,7 @@
     const statusEl = document.getElementById('status');
 
     if (!title) {
-      document.body.innerHTML = '<p style="padding:20px;font-size:18px;">⚠️ Ошибка: не передано название фильма.</p>';
+      document.body.innerHTML = '<p style="padding:20px;font-size:18px;">⚠️ Xatolik: film nomi berilmadi.</p>';
       throw new Error("Missing title");
     }
 
@@ -63,8 +63,8 @@
       Telegram.WebApp.ready();
       Telegram.WebApp.expand();
       const ok = (Telegram.WebApp.initData || '').length > 10;
-      statusEl.textContent = ok ? "✅ Telegram WebApp API доступен и initData получен." :
-                                  "⚠️ initData пустой (должно быть открыто внутри Telegram).";
+      statusEl.textContent = ok ? "✅ Telegram WebApp API mavjud va initData olindi." :
+                  "⚠️ initData bo'sh (Telegram ichida ochilishi kerak).";
     });
     -->
 
@@ -76,8 +76,8 @@
       const btn = document.getElementById(btnId);
       let c = sec; btn.disabled = true;
       const t = setInterval(() => {
-        btn.textContent = `ПРОДОЛЖИТЬ (${c})`;
-        if (--c < 0){ clearInterval(t); btn.textContent="ПРОДОЛЖИТЬ"; btn.disabled=false; btn.onclick=cb; }
+        btn.textContent = `DAVOM ETISH (${c})`;
+        if (--c < 0){ clearInterval(t); btn.textContent="DAVOM ETISH"; btn.disabled=false; btn.onclick=cb; }
       }, 1000);
     }
 
@@ -92,12 +92,12 @@
       const uid = Telegram.WebApp.initDataUnsafe?.user?.id;
 
       if (!qid || !uid) {
-        box.textContent = "❌ Нет query_id или user.id. Откройте Mini App через inline-кнопку в чате.";
+        box.textContent = "❌ query_id yoki user.id yo'q. Mini Appni chatdagi inline tugma orqali oching.";
         return;
       }
 
       try {
-        box.textContent = "📤 Отправляем подтверждение…";
+        box.textContent = "📤 Tasdiq yuborilmoqda…";
         const res = await fetch(BACKEND_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -105,9 +105,9 @@
         });
         const j = await res.json();
         if (!j.ok) throw new Error(j.error || "server error");
-        box.textContent = "✅ Готово! Сообщение отправлено и видео выслано.";
+        box.textContent = "✅ Tayyor! Xabar yuborildi va video jo'natildi.";
       } catch (e) {
-        box.textContent = "❌ Ошибка: " + e.message;
+        box.textContent = "❌ Xatolik: " + e.message;
         return;
       }
 

@@ -17,12 +17,12 @@ WEBAPP_URL = "https://web-app-ad-kappa.vercel.app"
 async def build_watch_keyboard(user_id: int, title: str) -> InlineKeyboardMarkup:
     """Клавиатура под карточкой (не видео)"""
     fav = await is_favorite(user_id, title)  # title -> bool
-    fav_text = "★ Удалить из избранного" if fav else "⭐ В избранное"
+    fav_text = "★ Sevimlilardan o'chirish" if fav else "⭐ Sevimlilarga qo'shish"
     fav_cb = f"fav:del:{title}" if fav else f"fav:add:{title}"
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="▶️ Смотреть", callback_data=f"play:{title}")],
         [InlineKeyboardButton(text=fav_text, callback_data=fav_cb)],
-        [InlineKeyboardButton(text="🏠 Главное меню", callback_data="back_to_menu")],
+        [InlineKeyboardButton(text="🏠 Asosiy menyu", callback_data="back_to_menu")],
     ])
 
 
@@ -33,23 +33,23 @@ async def handle_watch(callback: CallbackQuery):
     title = callback.data.split("watch:", 1)[1]
     film = get_film_by_title(title)
     if not film:
-        await callback.message.answer("❌ Фильм не найден.")
+        await callback.message.answer("❌ Film topilmadi.")
         await callback.answer()
         return
 
     title, description, _ = film
     caption = f"🎬 <b>{title}</b>\n{description}\n\n"
     if (await is_user_vip(user_id)) or try_consume_free_view(user_id):
-        caption += "✅ Вы можете смотреть видео без рекламы."
+        caption += "✅ Siz reklamasiz videoni ko'rishingiz mumkin."
         kb = await build_watch_keyboard(user_id, title)
     else:
-        caption += "⚠️ Жми «Смотреть рекламу», чтобы бесплатно открыть видео."
+        caption += "⚠️ Reklamani ko'rish tugmasini bosing, videoni bepul ochish uchun."
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(
-                text="📺 Смотреть рекламу",
+                text="📺 Reklamani ko'rish",
                 web_app=WebAppInfo(url=f"{WEBAPP_URL}?title={quote(title)}")
             )],
-            [InlineKeyboardButton(text="🏠 Главное меню", callback_data="back_to_menu")],
+            [InlineKeyboardButton(text="🏠 Asosiy menyu", callback_data="back_to_menu")],
         ])
 
     await callback.message.answer(caption, reply_markup=kb)
@@ -63,10 +63,10 @@ async def handle_play(callback: CallbackQuery):
     title = callback.data.split("play:", 1)[1]
     try:
         await send_video_to_user(callback.bot, user_id, title)
-        await callback.bot.send_message(user_id, "Готово! Что дальше? 👇", reply_markup=get_main_menu_keyboard())
+        await callback.bot.send_message(user_id, "Tayyor! Keyingi nima? 👇", reply_markup=get_main_menu_keyboard())
     except Exception as e:
         logger.exception(f"Ошибка при отправке фильма '{title}': {e}")
-        await callback.bot.send_message(user_id, "🚫 Не удалось отправить фильм.")
+        await callback.bot.send_message(user_id, "🚫 Filmni yuborib bo'lmadi.")
     finally:
         await callback.answer()
 
@@ -79,17 +79,17 @@ async def handle_favorite_toggle_title(callback: CallbackQuery):
     try:
         prefix, action, title = callback.data.split(":", 2)
     except ValueError:
-        await callback.answer("Неверные данные.", show_alert=True)
+        await callback.answer("Noto'g'ri ma'lumotlar.", show_alert=True)
         return
 
     if action == "add":
         ok = await add_favorite(user_id, title)   # добавление по title
-        await callback.answer("Добавлено в избранное ⭐" if ok else "Не удалось добавить", show_alert=not ok)
+        await callback.answer("Sevimlilarga qo'shildi ⭐" if ok else "Qo'shib bo'lmadi", show_alert=not ok)
     elif action == "del":
         ok = await remove_favorite(user_id, title)  # удаление по title
-        await callback.answer("Удалено из избранного" if ok else "Не удалось удалить", show_alert=not ok)
+        await callback.answer("Sevimlilardan o'chirildi" if ok else "O'chirib bo'lmadi", show_alert=not ok)
     else:
-        await callback.answer("Неизвестное действие.", show_alert=True)
+        await callback.answer("Noma'lum amal.", show_alert=True)
         return
 
     # обновим клавиатуру у этой же карточки

@@ -3,8 +3,8 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 def watched_kb(film_id: int) -> InlineKeyboardMarkup:
     """
-    Сообщение-приглашение смотреть после рекламы.
-    Тут ОДНА кнопка «Смотреть видео».
+    Reklama ko'rsatilgandan so'ng videoni tomosha qilishga taklif.
+    Bu yerda bitta tugma: "Videoni ko'rish".
     """
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="▶️ Смотреть видео", callback_data=f"watch:{film_id}")]
@@ -13,9 +13,9 @@ def watched_kb(film_id: int) -> InlineKeyboardMarkup:
 
 def favorites_kb(film_id: int, is_fav: bool) -> InlineKeyboardMarkup:
     """
-    Клавиатура под самим видео — ТОЛЬКО избранное.
+    Video ostidagi klaviatura — faqat sevimlilar tugmasi.
     """
-    text = "⭐ Удалить из избранного" if is_fav else "⭐ В избранное"
+    text = "⭐ Sevimlilardan o'chirish" if is_fav else "⭐ Sevimlilarga qo'shish"
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=text, callback_data=f"fav:{film_id}")]
     ])

@@ -24,6 +24,12 @@ IGNORE_TEXTS = {
     "главное меню", "меню",
     "инструкция", "vip бесплатно", "vip", "настройки",
     "результаты поиска",
+    # Uzbek variants (keep Russian entries for backward compatibility)
+    "ko'rish", "▶️ ko'rish",
+    "reklamani ko'rish", "📺 reklamani ko'rish",
+    "asosiy menyu", "menyu",
+    "qo'llanma", "vip bepul", "vip", "sozlamalar",
+    "qidiruv natijalari",
 }
 
 # Запоминаем последнюю выдачу и запрос пользователя
@@ -35,8 +41,8 @@ _LAST_RESULTS: Dict[int, List[Tuple[int, str, str]]] = {}
 def _kb_single(title: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="🎬 Смотреть", callback_data=f"watch:{title}")],
-            [InlineKeyboardButton(text="🏠 Главное меню", callback_data="back_to_menu")],
+            [InlineKeyboardButton(text="🎬 Ko'rish", callback_data=f"watch:{title}")],
+            [InlineKeyboardButton(text="🏠 Asosiy menyu", callback_data="back_to_menu")],
         ]
     )
 
@@ -54,9 +60,9 @@ def _kb_list(rows: List[Tuple[int, str, str]]) -> InlineKeyboardMarkup:
 async def search_start(callback: CallbackQuery):
     """Открытие раздела «Поиск» — как было у тебя раньше."""
     await callback.message.answer(
-        "🔍 Чтобы увидеть результаты поиска, просто напиши название фильма "
-        "или нажми <b>«Результаты поиска»</b>\n\n"
-        "💡 Не получилось — нажми кнопку «Инструкция»",
+        "🔍 Qidiruv natijalarini ko'rish uchun film nomini yozing yoki "
+        "<b>«Qidiruv natijalari»</b> tugmasini bosing\n\n"
+        "💡 Bo‘lmasa — «Qo'llanma» tugmasini bosing",
         reply_markup=get_search_menu_keyboard(),
     )
     await callback.answer()
@@ -76,20 +82,20 @@ async def handle_text_search(message: Message):
     _LAST_RESULTS[message.from_user.id] = rows
 
     if not rows:
-        await message.answer("❌ Ничего не найдено по вашему запросу.")
+        await message.answer("❌ Sizning so'rovingiz bo'yicha hech narsa topilmadi.")
         return
 
     # Если есть точное совпадение по названию ИЛИ найден ровно один — сразу карточка фильма
     exact = next((r for r in rows if r[1].lower() == query.lower()), None)
     if exact or len(rows) == 1:
         _id, title, description = exact if exact else rows[0]
-        text = f"🎬 <b>{title}</b>\n{description}\n\nВыберите действие:"
+        text = f"🎬 <b>{title}</b>\n{description}\n\nAmalni tanlang:"
         await message.answer(text, reply_markup=_kb_single(title))
         return
 
     # Иначе — список результатов
     await message.answer(
-        f"🔎 Результаты по запросу: <b>{query}</b>",
+        f"🔎 So'rov bo'yicha natijalar: <b>{query}</b>",
         reply_markup=_kb_list(rows),
     )
 
@@ -102,13 +108,13 @@ async def show_last_results(callback: CallbackQuery):
     query = _LAST_QUERY.get(user_id)
 
     if not rows:
-        await callback.message.answer("🔎 Сначала отправьте название фильма сообщением.")
+        await callback.message.answer("🔎 Avvalo film nomini xabar sifatida yuboring.")
         await callback.answer()
         return
 
     if len(rows) == 1:
         _id, title, description = rows[0]
-        text = f"🎬 <b>{title}</b>\n{description}\n\nВыберите действие:"
+        text = f"🎬 <b>{title}</b>\n{description}\n\nAmalni tanlang:"
         await callback.message.answer(text, reply_markup=_kb_single(title))
     else:
         await callback.message.answer(

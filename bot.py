@@ -5,10 +5,12 @@ import asyncio
 import logging
 from aiohttp import web
 from uuid import uuid4
+
 from handlers import get_movie_by_code
-from config import BOT_TOKEN
 from handlers import start, search, watch, settings, info, collections, filter, favorites, favlist, referral
+from config import BOT_TOKEN, CHANNEL_LINK
 from utils.debug_middleware import DebugMiddleware
+from middleware.check_subscription import CheckSubscriptionMiddleware
 from aiogram.types import (
     InlineQuery, InlineQueryResultArticle, InputTextMessageContent,
     InlineKeyboardMarkup, InlineKeyboardButton
@@ -22,6 +24,22 @@ bot = Bot(
     default=DefaultBotProperties(parse_mode=ParseMode.HTML)
 )
 dp = Dispatcher()
+
+# ---------- Middleware qo'shish ----------
+dp.message.middleware(CheckSubscriptionMiddleware())
+dp.callback_query.middleware(CheckSubscriptionMiddleware())
+
+# ixtiyoriy — loglar
+# dp.message.middleware(DebugMiddleware())
+# dp.callback_query.middleware(DebugMiddleware())
+# dp.errors.middleware(DebugMiddleware())
+# dp.update.outer_middleware(DebugMiddleware())
+
+for name in ("aiogram", "aiogram.dispatcher", "aiogram.event",
+             "aiohttp.access", "aiosqlite"):
+    logging.getLogger(name).setLevel(logging.WARNING)
+
+# ---------- Routers qo'shish ----------
 dp.include_router(get_movie_by_code.router)
 dp.include_router(start.router)
 dp.include_router(referral.router)
@@ -34,24 +52,12 @@ dp.include_router(info.router)
 dp.include_router(collections.router)
 dp.include_router(filter.router)
 
-
-# опционально — логи
-# dp.message.middleware(DebugMiddleware())
-# dp.callback_query.middleware(DebugMiddleware())
-# dp.errors.middleware(DebugMiddleware())
-# dp.update.outer_middleware(DebugMiddleware())
-
-for name in ("aiogram", "aiogram.dispatcher", "aiogram.event",
-             "aiohttp.access", "aiosqlite"):
-    logging.getLogger(name).setLevel(logging.WARNING)
-
-
-# INLINE MODE
+# ---------- INLINE MODE ----------
 @dp.inline_query()
 async def inline_search_handler(inline_query: InlineQuery):
     """
-    Обработка inline поиска (@botname текст).
-    Показывает: тип (фильм/сериал), год, жанры, страну, рейтинг.
+    Inline qidiruvni ishlash (@botname matn).
+    Ko'rsatadi: tur (film/serial), yil, janrlar, mamlakat, reyting.
     """
     try:
         from utils.db import search_films_by_title_or_tags
@@ -61,20 +67,14 @@ async def inline_search_handler(inline_query: InlineQuery):
         results = []
 
         if not query:
-            # Если запрос пустой - показываем фильмы из своей БД
             from utils.db import get_random_films
             films = get_random_films(limit=10)
 
             for title, _ in films:
-                # Для каждого фильма из БД получаем данные из TMDB
                 try:
                     tmdb_data = await search_tmdb_movie(title)
-
                     if tmdb_data:
-                        # Короткое описание для превью
                         desc_short = f"{tmdb_data['media_type']} | {tmdb_data['genres']} | {tmdb_data['year']}"
-
-                        # Полное описание в сообщении
                         full_desc = (
                             f"🎬 <b>{tmdb_data['title']}</b>\n"
                             f"📺 {tmdb_data['media_type']} | {tmdb_data['countries']} | {tmdb_data['year']}\n"
@@ -83,9 +83,8 @@ async def inline_search_handler(inline_query: InlineQuery):
                         )
                         poster_url = tmdb_data['poster_url']
                     else:
-                        # Если TMDB не нашел - берем из своей БД
-                        desc_short = "Нет описания"
-                        full_desc = f"🎬 <b>{title}</b>\n\nОписание отсутствует"
+                        desc_short = "Tavsif yo'q"
+                        full_desc = f"🎬 <b>{title}</b>\n\nTavsif mavjud emas"
                         poster_url = "https://via.placeholder.com/150"
 
                     results.append(
@@ -99,48 +98,41 @@ async def inline_search_handler(inline_query: InlineQuery):
                                 parse_mode="HTML"
                             ),
                             reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                                [InlineKeyboardButton(text="▶️ Смотреть", callback_data=f"watch:{title}")],
-                                [InlineKeyboardButton(text="🏠 Главное меню", callback_data="back_to_menu")]
+                                [InlineKeyboardButton(text="▶️ Ko'rish", callback_data=f"watch:{title}")],
+                                [InlineKeyboardButton(text="🏠 Bosh menyu", callback_data="back_to_menu")]
                             ])
                         )
                     )
                 except Exception as e:
-                    logger.exception(f"Ошибка обработки фильма '{title}': {e}")
+                    logger.exception(f"Film '{title}'ni qayta ishlashda xato: {e}")
                     continue
 
         else:
-            # Ищем по запросу СНАЧАЛА в своей БД (чтобы знать, что у нас есть видео)
             films = search_films_by_title_or_tags(query, limit=20)
-            logger.info(f"📊 Inline поиск '{query}': найдено {len(films)} фильмов в БД")
+            logger.info(f"📊 Inline qidiruv '{query}': DBda {len(films)} ta film topildi")
 
             if not films:
-                # Если ничего не найдено — показываем заглушку
                 results.append(
                     InlineQueryResultArticle(
                         id=str(uuid4()),
-                        title="Ничего не найдено 😔",
-                        description="Попробуйте ввести другой запрос",
+                        title="Hech narsa topilmadi 😔",
+                        description="Boshqa so'rov kiriting",
                         thumbnail_url="https://via.placeholder.com/150?text=Not+Found",
                         input_message_content=InputTextMessageContent(
-                            message_text="❌ <b>Ничего не найдено</b>\n\nПопробуйте ввести другой запрос или воспользуйтесь кнопками меню.",
+                            message_text="❌ <b>Hech narsa topilmadi</b>\n\nBoshqa so'rov kiriting yoki menyu tugmalaridan foydalaning.",
                             parse_mode="HTML"
                         ),
                         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                            [InlineKeyboardButton(text="🏠 Главное меню", callback_data="back_to_menu")]
+                            [InlineKeyboardButton(text="🏠 Bosh menyu", callback_data="back_to_menu")]
                         ])
                     )
                 )
             else:
-                # Для каждого найденного фильма получаем данные из TMDB
                 for film_id, title, db_description in films:
                     try:
                         tmdb_data = await search_tmdb_movie(title)
-
                         if tmdb_data:
-                            # Короткое описание для превью
                             desc_short = f"{tmdb_data['media_type']} | {tmdb_data['genres']} | {tmdb_data['year']}"
-
-                            # Полное описание в сообщении
                             full_desc = (
                                 f"🎬 <b>{tmdb_data['title']}</b>\n"
                                 f"📺 {tmdb_data['media_type']} | {tmdb_data['countries']} | {tmdb_data['year']}\n"
@@ -149,10 +141,9 @@ async def inline_search_handler(inline_query: InlineQuery):
                             )
                             poster_url = tmdb_data['poster_url']
                         else:
-                            # Fallback на данные из своей БД
-                            desc_short = db_description[:50] if db_description else "Нет описания"
-                            full_desc = f"🎬 <b>{title}</b>\n\n{db_description or 'Описание отсутствует'}"
-                            poster_url = "https://https://some_link_on_picture"
+                            desc_short = db_description[:50] if db_description else "Tavsif yo'q"
+                            full_desc = f"🎬 <b>{title}</b>\n\n{db_description or 'Tavsif mavjud emas'}"
+                            poster_url = "https://via.placeholder.com/150"
 
                         results.append(
                             InlineQueryResultArticle(
@@ -165,54 +156,27 @@ async def inline_search_handler(inline_query: InlineQuery):
                                     parse_mode="HTML"
                                 ),
                                 reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                                    [InlineKeyboardButton(text="▶️ Смотреть", callback_data=f"watch:{title}")],
-                                    [InlineKeyboardButton(text="🏠 Главное меню", callback_data="back_to_menu")]
+                                    [InlineKeyboardButton(text="▶️ Ko'rish", callback_data=f"watch:{title}")],
+                                    [InlineKeyboardButton(text="🏠 Bosh menyu", callback_data="back_to_menu")]
                                 ])
                             )
                         )
                     except Exception as e:
-                        logger.exception(f"Ошибка обработки фильма '{title}': {e}")
+                        logger.exception(f"Film '{title}'ni qayta ishlashda xato: {e}")
                         continue
 
-        # ВАЖНО: всегда отвечаем, даже если results пустой
         await inline_query.answer(
-            results=results[:50] if results else [
-                InlineQueryResultArticle(
-                    id=str(uuid4()),
-                    title="Ошибка загрузки 😔",
-                    description="Попробуйте еще раз",
-                    thumbnail_url="https://some_link_on_error_picture" ,
-                    input_message_content=InputTextMessageContent(
-                        message_text="⚠️ Произошла ошибка при поиске. Попробуйте еще раз.",
-                        parse_mode="HTML"
-                    )
-                )
-            ],
+            results=results[:50] if results else [],
             cache_time=10,
             is_personal=True
         )
 
     except Exception as e:
-        logger.exception(f"Критическая ошибка в inline_search_handler: {e}")
-        # В случае критической ошибки всё равно отвечаем
-        await inline_query.answer(
-            results=[
-                InlineQueryResultArticle(
-                    id=str(uuid4()),
-                    title="Ошибка сервера 😔",
-                    description="Попробуйте позже",
-                    thumbnail_url="https://some_link_on_error_picture",
-                    input_message_content=InputTextMessageContent(
-                        message_text="⚠️ Произошла критическая ошибка. Попробуйте позже.",
-                        parse_mode="HTML"
-                    )
-                )
-            ],
-            cache_time=1
-        )
+        logger.exception(f"Inline search handlerda tanqidiy xato: {e}")
+        await inline_query.answer(results=[], cache_time=1)
 
 
-# CORS helpers
+# ---------- Web server qismlari ----------
 def _cors(resp: web.StreamResponse) -> web.StreamResponse:
     resp.headers["Access-Control-Allow-Origin"] = "*"
     resp.headers["Access-Control-Allow-Headers"] = "Content-Type"
@@ -222,30 +186,22 @@ def _cors(resp: web.StreamResponse) -> web.StreamResponse:
 async def handle_options(request: web.Request):
     return _cors(web.Response())
 
-# WebApp backend: /webapp/done
 async def webapp_done(request: web.Request):
-    """
-    POST /webapp/done
-    JSON: {"user_id": 123456789, "title": "Матрица"}
-    """
     try:
         data = await request.json()
         user_id = data.get("user_id")
         title   = data.get("title")
 
-        logger.info(f"[WEBAPP_DONE->MSG] data={data}")
-
         if not user_id or not title:
             return _cors(web.json_response({"ok": False, "error": "user_id and title required"}, status=400))
 
         text = (
-            "<b>Реклама просмотрена.</b>\n\n"
-            "👉 <a href='https://t.me/ВАШ_КОНТАКТ_ДЛЯ_РЕКЛАМЫ'>Заказать рекламу</a>\n\n"
-            "Смотреть видео 👇"
+            "<b>Reklama ko'rildi.</b>\n\n"
+            "Videoni ko'rish 👇"
         )
 
         kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="▶️ Смотреть видео", callback_data=f"play:{title}")]
+            [InlineKeyboardButton(text="▶️ Videoni ko'rish", callback_data=f"play:{title}")]
         ])
 
         await bot.send_message(
@@ -257,7 +213,7 @@ async def webapp_done(request: web.Request):
 
         return _cors(web.json_response({"ok": True}))
     except Exception as e:
-        logger.exception("webapp_done error")
+        logger.exception("webapp_done xatosi")
         return _cors(web.json_response({"ok": False, "error": str(e)}, status=500))
 
 
@@ -272,16 +228,18 @@ async def run_web_server():
     await site.start()
     logger.info("Web server started on http://0.0.0.0:8080")
 
+
 async def main():
     await bot.delete_webhook(drop_pending_updates=True)
-    logger.info("Бот запущен. Нажмите Ctrl+C для остановки.")
+    logger.info("Bot ishga tushdi. To'xtatish uchun Ctrl+C bosing.")
     await asyncio.gather(
         dp.start_polling(bot),
         run_web_server()
     )
 
+
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        logger.info("Программа остановлена вручную.")
+        logger.info("Dastur qo'lda to'xtatildi.")

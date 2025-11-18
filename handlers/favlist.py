@@ -20,20 +20,20 @@ def _kb_favlist(rows, offset, total) -> InlineKeyboardMarkup:
     for film_id, title, _ in rows:
         kb.append([
             InlineKeyboardButton(text=f"▶️ {title}", callback_data=f"watch:{title}"),
-            InlineKeyboardButton(text=" <- 🗑 Удалить избранное", callback_data=f"favremove:{film_id}:{offset}"),
+            InlineKeyboardButton(text=" <- 🗑 Sevimlilardan o'chirish", callback_data=f"favremove:{film_id}:{offset}"),
         ])
 
     nav = []
     if offset > 0:
         prev_off = max(0, offset - PAGE_SIZE)
-        nav.append(InlineKeyboardButton(text="◀️ Назад", callback_data=f"favpage:{prev_off}"))
+        nav.append(InlineKeyboardButton(text="◀️ Orqaga", callback_data=f"favpage:{prev_off}"))
     if offset + PAGE_SIZE < total:
         next_off = offset + PAGE_SIZE
-        nav.append(InlineKeyboardButton(text="Вперёд ▶️", callback_data=f"favpage:{next_off}"))
+        nav.append(InlineKeyboardButton(text="Oldinga ▶️", callback_data=f"favpage:{next_off}"))
     if nav:
         kb.append(nav)
 
-    kb.append([InlineKeyboardButton(text="🏠 Главное меню", callback_data="back_to_menu")])
+    kb.append([InlineKeyboardButton(text="🏠 Asosiy menyu", callback_data="back_to_menu")])
     return InlineKeyboardMarkup(inline_keyboard=kb)
 
 
@@ -45,14 +45,14 @@ async def open_favorites(callback: CallbackQuery):
 
     if not favs:
         await callback.message.answer(
-            "⭐ В избранном пока пусто.\nДобавляйте фильмы кнопкой «⭐ В избранное» под видео."
+            "⭐ Sevimlilar hali bo'sh.\nVideoning ostidagi «⭐ Sevimlilarga qo'shish» tugmasi bilan filmlarni qo'shing."
         )
         await callback.answer()
         return
 
     total = len(favs)
     await callback.message.answer(
-        f"⭐ Ваше избранное — {total} шт.",
+        f"⭐ Sevimlilaringiz — {total} ta.",
         reply_markup=_kb_favlist(favs[:PAGE_SIZE], 0, total),
     )
     await callback.answer()
@@ -65,7 +65,7 @@ async def paginate_favorites(callback: CallbackQuery):
     try:
         offset = int(callback.data.split(":", 1)[1])
     except Exception:
-        await callback.answer("Некорректные данные.", show_alert=True)
+        await callback.answer("Noto'g'ri ma'lumotlar.", show_alert=True)
         return
 
     favs = get_favorites(user_id)
@@ -78,7 +78,7 @@ async def paginate_favorites(callback: CallbackQuery):
         )
     except Exception:
         await callback.message.answer(
-            f"⭐ Ваше избранное — {total} шт.",
+            f"⭐ Sevimlilaringiz — {total} ta.",
             reply_markup=_kb_favlist(slice_rows, offset, total),
         )
     await callback.answer()
@@ -93,7 +93,7 @@ async def remove_from_favorites(callback: CallbackQuery):
         film_id = int(film_id_str)
         offset = int(offset_str)
     except Exception:
-        await callback.answer("Некорректные данные.", show_alert=True)
+        await callback.answer("Noto'g'ri ma'lumotlar.", show_alert=True)
         return
 
     remove_favorite(user_id, film_id)
@@ -111,7 +111,7 @@ async def remove_from_favorites(callback: CallbackQuery):
         )
     except Exception:
         await callback.message.answer(
-            f"⭐ Ваше избранное — {total} шт.",
+            f"⭐ Sevimlilaringiz — {total} ta.",
             reply_markup=_kb_favlist(slice_rows, offset, total)
         )
-    await callback.answer("Удалено из избранного.")
+    await callback.answer("Sevimlilardan o'chirildi.")

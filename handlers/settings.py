@@ -17,10 +17,10 @@ async def show_settings(callback: CallbackQuery, bot: Bot):
     user_id = callback.from_user.id
     info = get_user_info(user_id)
     if not info:
-        await callback.message.answer("⚠️ Пользователь не найден.")
+        await callback.message.answer("⚠️ Foydalanuvchi topilmadi.")
         return
 
-    status = "VIP ✅" if info["is_vip"] else "не VIP ❌"
+    status = "VIP ✅" if info["is_vip"] else "VIP emas ❌"
     invites = info["invites_count"]
     views = info["free_views"]
 
@@ -29,18 +29,18 @@ async def show_settings(callback: CallbackQuery, bot: Bot):
     ref_link = f"https://t.me/{bot_username}?start={user_id}"
 
     text = (
-        f"⚙️ <b>Ваши настройки</b>\n\n"
+        f"⚙️ <b>Sizning sozlamalaringiz</b>\n\n"
         f"🆔 <b>ID:</b> <code>{user_id}</code>\n"
-        f"👑 <b>Статус:</b> {status}\n"
-        f"🙌 <b>Приглашено друзей:</b> {invites} из 10\n"
-        f"🎁 <b>Бесплатных просмотров:</b> {views}\n\n"
-        f"🔗 <b>Ваша реферальная ссылка:</b>\n<code>{ref_link}</code>\n\n"
-        f"Пригласите 10 друзей и получите VIP-доступ без рекламы 😉"
+        f"👑 <b>Status:</b> {status}\n"
+        f"🙌 <b>Taklif qilingan do'stlar:</b> {invites} / 10\n"
+        f"🎁 <b>Bepul ko'rishlar:</b> {views}\n\n"
+        f"🔗 <b>Sizning referal havolangiz:</b>\n<code>{ref_link}</code>\n\n"
+        f"10 do'stni taklif qiling va reklamasiz VIP-kirish oling 😉"
     )
 
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🎁 Поделиться с друзьями", callback_data="ref_share")],
-        [InlineKeyboardButton(text="🏠 Главное меню", callback_data="back_to_menu")]
+        [InlineKeyboardButton(text="🎁 Do'stlar bilan ulashish", callback_data="ref_share")],
+        [InlineKeyboardButton(text="🏠 Asosiy menyu", callback_data="back_to_menu")]
     ])
 
     await callback.message.answer(text, reply_markup=kb)

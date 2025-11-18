@@ -11,17 +11,17 @@ router = Router()
 @router.callback_query(F.data == "help")
 async def help_root(callback: CallbackQuery):
     text = (
-        "📖 <b>Инструкция</b>\n\n"
-        "• Найдите фильм по названию или через «Подборки/Фильтр».\n"
-        "• Нажмите «Смотреть рекламу», затем «▶️ Смотреть» — видео придёт в чат.\n"
-        "• Хотите без рекламы? Загляните в раздел «VIP бесплатно».\n\n"
-        "Выберите раздел ниже:"
+        "📖 <b>Qo'llanma</b>\n\n"
+        "• Filmni nomi bo‘yicha yoki «To‘plamlar/Filtr» orqali toping.\n"
+        "• «Reklamani ko‘rish»ni bosing, so‘ng «▶️ Ko‘rish» — video chatga keladi.\n"
+        "• Reklamasiz ko‘rishni xohlaysizmi? «VIP bepul» bo‘limiga qarang.\n\n"
+        "Quyidan bo‘limni tanlang:"
     )
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="▶️ Как смотреть", callback_data="help_watch")],
-        [InlineKeyboardButton(text="🎛 Фильтр и поиск", callback_data="help_filter")],
-        [InlineKeyboardButton(text="❓ Частые вопросы", callback_data="help_faq")],
-        [InlineKeyboardButton(text="🏠 Главное меню", callback_data="back_to_menu")],
+        [InlineKeyboardButton(text="▶️ Qanday ko'rish", callback_data="help_watch")],
+        [InlineKeyboardButton(text="🎛 Filtr va qidiruv", callback_data="help_filter")],
+        [InlineKeyboardButton(text="❓ FAQ", callback_data="help_faq")],
+        [InlineKeyboardButton(text="🏠 Asosiy menyu", callback_data="back_to_menu")],
     ])
     await callback.message.answer(text, reply_markup=kb)
     await callback.answer()
@@ -29,15 +29,15 @@ async def help_root(callback: CallbackQuery):
 @router.callback_query(F.data == "help_watch")
 async def help_watch(callback: CallbackQuery):
     text = (
-        "▶️ <b>Как посмотреть фильм</b>\n\n"
-        "1) Откройте карточку фильма → «📺 Смотреть рекламу».\n"
-        "2) В мини-приложении дождитесь 2 экранов рекламы и нажмите «Вернуться к просмотру».\n"
-        "3) Бот пришлёт сообщение «Смотреть видео 👇». Нажмите «▶️ Смотреть» — видео придёт в чат.\n\n"
-        "Если реклама не загрузилась — просто откройте мини-окно ещё раз."
+        "▶️ <b>Filmni qanday ko'rish</b>\n\n"
+        "1) Film kartasini oching → «📺 Reklamani ko‘rish».\n"
+        "2) Mini-ilovada 2 ta reklama ekranini kuting va «Ko'rishga qaytish» tugmasini bosing.\n"
+        "3) Bot «Video ko'rish 👇» xabarini yuboradi. «▶️ Ko'rish» tugmasini bosing — video chatga keladi.\n\n"
+        "Agar reklama yuklanmasa — mini oynani qayta oching."
     )
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="↩️ Назад к инструкции", callback_data="help")],
-        [InlineKeyboardButton(text="🏠 Главное меню", callback_data="back_to_menu")],
+        [InlineKeyboardButton(text="↩️ Qo'llanmaga qaytish", callback_data="help")],
+        [InlineKeyboardButton(text="🏠 Asosiy menyu", callback_data="back_to_menu")],
     ])
     await callback.message.answer(text, reply_markup=kb)
     await callback.answer()
@@ -45,16 +45,16 @@ async def help_watch(callback: CallbackQuery):
 @router.callback_query(F.data == "help_filter")
 async def help_filter(callback: CallbackQuery):
     text = (
-        "🎛️ <b>Фильтр и поиск</b>\n\n"
-        "• Введите точное название, например <code>Интерстеллар</code>.\n"
-        "• «Фильтр» — выберите жанр/год/качество.\n"
-        "• «Подборки» — готовые коллекции по темам.\n\n"
-        "Не нашли? Попробуйте альтернативное написание (латиницей/русским)."
+        "🎛️ <b>Filtr va qidiruv</b>\n\n"
+        "• To‘liq nomni kiriting, masalan <code>Interstellar</code>.\n"
+        "• «Filtr» — janr/yil/sifatni tanlang.\n"
+        "• «To‘plamlar» — mavzular bo‘yicha tayyor kolleksiyalar.\n\n"
+        "Topilmadi? Alternativ yozuvni (lotin yoki kirill) sinab ko‘ring."
     )
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔎 Начать поиск", callback_data="search")],
-        [InlineKeyboardButton(text="↩️ Назад к инструкции", callback_data="help")],
-        [InlineKeyboardButton(text="🏠 Главное меню", callback_data="back_to_menu")],
+        [InlineKeyboardButton(text="🔎 Qidirishni boshlash", callback_data="search")],
+        [InlineKeyboardButton(text="↩️ Qo'llanmaga qaytish", callback_data="help")],
+        [InlineKeyboardButton(text="🏠 Asosiy menyu", callback_data="back_to_menu")],
     ])
     await callback.message.answer(text, reply_markup=kb)
     await callback.answer()
@@ -63,12 +63,12 @@ async def help_filter(callback: CallbackQuery):
 async def help_faq(callback: CallbackQuery):
     text = (
         "❓ <b>FAQ</b>\n\n"
-        "• <b>Видео не пришло</b> — проверьте интернет и повторите «Смотреть рекламу».\n"
-        "• <b>Хочу без рекламы</b> — откройте «VIP бесплатно».\n"
+        "• <b>Video kelmadi</b> — internetni tekshiring va «Reklamani ko‘rish»ni qayta bajaring.\n"
+        "• <b>Reklamasiz ko'rmoqchiman</b> — «VIP bepul» bo‘limini oching.\n"
     )
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="↩️ Назад к инструкции", callback_data="help")],
-        [InlineKeyboardButton(text="🏠 Главное меню", callback_data="back_to_menu")],
+        [InlineKeyboardButton(text="↩️ Qo'llanmaga qaytish", callback_data="help")],
+        [InlineKeyboardButton(text="🏠 Asosiy menyu", callback_data="back_to_menu")],
     ])
     await callback.message.answer(text, reply_markup=kb)
     await callback.answer()
@@ -78,16 +78,16 @@ async def help_faq(callback: CallbackQuery):
 @router.callback_query(F.data == "vip")
 async def vip_root(callback: CallbackQuery):
     text = (
-        "👑 <b>VIP бесплатно</b>\n\n"
-        "Что даёт VIP:\n"
-        "• Просмотр без рекламы\n\n"
-        "Как получить бесплатно — выберите ниже:"
+        "👑 <b>VIP bepul</b>\n\n"
+        "VIP nima beradi:\n"
+        "• Reklamasiz ko‘rish\n"
+        "Bepul olish uchun — quyidan tanlang:"
     )
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="💡 Как получить", callback_data="vip_how")],
-        [InlineKeyboardButton(text="🎁 Пригласить друзей", callback_data="vip_invite")],
-        [InlineKeyboardButton(text="ℹ️ Преимущества", callback_data="vip_benefits")],
-        [InlineKeyboardButton(text="🏠 Главное меню", callback_data="back_to_menu")],
+        [InlineKeyboardButton(text="💡 Qanday olish", callback_data="vip_how")],
+        [InlineKeyboardButton(text="🎁 Do‘stlarni taklif qilish", callback_data="vip_invite")],
+        [InlineKeyboardButton(text="ℹ️ Afzalliklar", callback_data="vip_benefits")],
+        [InlineKeyboardButton(text="🏠 Asosiy menyu", callback_data="back_to_menu")],
     ])
     await callback.message.answer(text, reply_markup=kb)
     await callback.answer()
@@ -95,15 +95,15 @@ async def vip_root(callback: CallbackQuery):
 @router.callback_query(F.data == "vip_how")
 async def vip_how(callback: CallbackQuery):
     text = (
-        "💡 <b>Как получить VIP бесплатно</b>\n\n"
-        "1) Пригласи 10 друзей по персональной ссылке.\n"
-        "2) Каждый должен запустить бота по ссылке и открыть главное меню.\n"
-        "3) Когда выполнится — VIP активируется автоматически в «Настройках»."
+        "💡 <b>VIPni bepul olish</b>\n\n"
+        "1) 10 ta do‘stni shaxsiy havola orqali taklif qiling.\n"
+        "2) Har biri havola orqali botni ishga tushirishi va asosiy menyuni ochishi kerak.\n"
+        "3) Shu bajarilgach — VIP avtomatik tarzda “Sozlamalar” bo‘limida faollashadi."
     )
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🎁 Пригласить друзей", callback_data="vip_invite")],
-        [InlineKeyboardButton(text="↩️ Назад к VIP", callback_data="vip")],
-        [InlineKeyboardButton(text="🏠 Главное меню", callback_data="back_to_menu")],
+        [InlineKeyboardButton(text="🎁 Do‘stlarni taklif qilish", callback_data="vip_invite")],
+        [InlineKeyboardButton(text="↩️ VIPga qaytish", callback_data="vip")],
+        [InlineKeyboardButton(text="🏠 Asosiy menyu", callback_data="back_to_menu")],
     ])
     await callback.message.answer(text, reply_markup=kb)
     await callback.answer()
@@ -116,15 +116,15 @@ async def vip_invite(callback: CallbackQuery):
     deep_link = f"https://t.me/{username}?start={user_id}"
 
     text = (
-        "🎁 <b>Пригласить друзей</b>\n\n"
-        "Отправь эту ссылку друзьям. Когда 10 человек запустят бота по ссылке, "
-        "VIP активируется автоматически.\n\n"
+        "🎁 <b> Do‘stlarni taklif qilish</b>\n\n"
+        "Ushbu havolani do‘stlaringizga yuboring. 10 kishi botni havola orqali ishga tushirganda,"
+        "VIP avtomatik faollashadi.\n\n"
         f"<code>{deep_link}</code>"
     )
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🎁 Поделиться с друзьями", callback_data="ref_share")],  # <- НОВАЯ КНОПКА
-        [InlineKeyboardButton(text="↩️ Назад к VIP", callback_data="vip")],
-        [InlineKeyboardButton(text="🏠 Главное меню", callback_data="back_to_menu")],
+        [InlineKeyboardButton(text="🎁 Do‘stlar bilan ulashish", callback_data="ref_share")],  # <- НОВАЯ КНОПКА
+        [InlineKeyboardButton(text="↩️ VIPga qaytish", callback_data="vip")],
+        [InlineKeyboardButton(text="🏠 Asosiy menyu", callback_data="back_to_menu")],
     ])
     await callback.message.answer(text, reply_markup=kb, disable_web_page_preview=True)
     await callback.answer()
@@ -132,12 +132,12 @@ async def vip_invite(callback: CallbackQuery):
 @router.callback_query(F.data == "vip_benefits")
 async def vip_benefits(callback: CallbackQuery):
     text = (
-        "ℹ️ <b>Преимущества VIP</b>\n\n"
-        "• Просмотр без рекламы\n"
+        "ℹ️ <b>VIP afzalliklari</b>\n\n"
+        "• Reklamasiz tomosha \n"
     )
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="↩️ Назад к VIP", callback_data="vip")],
-        [InlineKeyboardButton(text="🏠 Главное меню", callback_data="back_to_menu")],
+        [InlineKeyboardButton(text="↩️ VIPga qaytish", callback_data="vip")],
+        [InlineKeyboardButton(text="🏠 Asosiy menyu", callback_data="back_to_menu")],
     ])
     await callback.message.answer(text, reply_markup=kb)
     await callback.answer()

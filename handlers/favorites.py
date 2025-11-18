@@ -12,7 +12,7 @@ async def toggle_fav_under_video(callback: CallbackQuery):
     """
     data = callback.data.split(":", 1)
     if len(data) != 2 or not data[1].isdigit():
-        await callback.answer("Неверные данные.", show_alert=True)
+        await callback.answer("Noto'g'ri ma'lumotlar.", show_alert=True)
         return
 
     film_id = int(data[1])
@@ -26,4 +26,4 @@ async def toggle_fav_under_video(callback: CallbackQuery):
     except Exception:
         pass
 
-    await callback.answer("Добавлено в избранное" if state else "Удалено из избранного")
+    await callback.answer("Sevimlilarga qo'shildi" if state else "Sevimlilardan o'chirildi")

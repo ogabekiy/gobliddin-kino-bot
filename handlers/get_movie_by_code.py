@@ -18,7 +18,7 @@ class MovieCode(StatesGroup):
 
 @router.callback_query(F.data == "get_movie_by_code")
 async def ask_code(callback: CallbackQuery, state: FSMContext):
-    await callback.message.answer("🎞 Введите код фильма (ID):")
+    await callback.message.answer("🎞 Filming kodini (ID) kiriting:")
     await state.set_state(MovieCode.waiting_for_code)
     await callback.answer()
 
@@ -38,13 +38,13 @@ async def send_movie_copy(message: Message, state: FSMContext):
 
         # 🔹 Keyin foydalanuvchini asosiy menuga qaytaramiz
         await message.answer(
-            "🏠 Главное меню:",
+            "🏠 Asosiy menyu:",
             reply_markup=get_main_menu_keyboard()
         )
 
     except Exception as e:
         await message.answer(
-            "❌ Ошибка при получении фильма. Проверьте код и попробуйте снова.",
+            "❌ Filmni olishda xatolik. Kodni tekshiring va qayta urinib ko'ring.",
             reply_markup=get_main_menu_keyboard()
         )
         print("Error while copying message:", e)

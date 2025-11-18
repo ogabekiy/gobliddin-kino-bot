@@ -2,12 +2,9 @@ import logging
 from aiogram import Router, F, Bot
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import (
-    Message, CallbackQuery,
-    InlineKeyboardMarkup, InlineKeyboardButton
-)
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
-from config import CHANNEL_LINKS
+from config import CHANNEL_LINK
 from keyboards.main_menu import get_main_menu_keyboard
 from utils.check_subs import is_subscribed
 from utils.db import register_user
@@ -16,108 +13,102 @@ logger = logging.getLogger(__name__)
 router = Router()
 
 
-# /start с параметром (реферал) — регистрируем + проверка подписки
-@router.message(CommandStart(deep_link=True))
-async def start_deeplink(message: Message, state: FSMContext, command: CommandStart):
+# ---------- ODDIY START ----------
+@router.message(CommandStart(deep_link=False))
+async def start_plain(message: Message, state: FSMContext, bot: Bot):
     await state.clear()
     user_id = message.from_user.id
 
-    # пригласивший
+    register_user(user_id)
+
+    # obuna tekshirish
+    if not await is_subscribed(bot, user_id):
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                # Asosiy Telegram kanal (shart)
+                [InlineKeyboardButton(text="📢 Kanalga obuna bo‘lish", url=CHANNEL_LINK)],
+                # Instagram faqat ko‘rsatish
+                [InlineKeyboardButton(text="📸 Instagram", url="https://www.instagram.com/gobliddin_kino")],
+                # Obuna bo'ldim tugmasi
+                [InlineKeyboardButton(text="✅ Obuna bo‘ldim", callback_data="check_subs")]
+            ]
+        )
+        return await message.answer(
+            "Iltimos Botdan to'liq foydalanish uchun quyidagi kanallarga obuna bo'ling! 👇",
+            reply_markup=keyboard
+        )
+
+    await message.answer("🏠 Asosiy menyu:", reply_markup=get_main_menu_keyboard())
+
+
+
+@router.callback_query(F.data == "check_subs")
+async def check_subscriptions(callback: CallbackQuery, bot: Bot):
+    user_id = callback.from_user.id
+
+    if await is_subscribed(bot, user_id):
+        await callback.message.edit_text(
+            "<b>Ajoyib! Obuna tasdiqlandi!</b>",
+            reply_markup=get_main_menu_keyboard()
+        )
+    else:
+        await callback.answer("Hali obuna bo‘lmagansiz!", show_alert=True)
+
+
+# ---------- REFERAL START ----------
+@router.message(CommandStart(deep_link=True))
+async def start_deeplink(message: Message, state: FSMContext, command: CommandStart, bot: Bot):
+    await state.clear()
+
+    user_id = message.from_user.id
     inviter_id = None
-    try:
-        if command.args:
+
+    if command.args:
+        try:
             inviter_id = int(command.args)
             if inviter_id == user_id:
                 inviter_id = None
-    except Exception:
-        inviter_id = None
+        except:
+            inviter_id = None
 
     register_user(user_id, invited_by=inviter_id)
-
-    # Сохраняем флаг, что пользователь пришел по реферальной ссылке
     await state.update_data(from_referral=True)
 
     text = (
-        "<b>🎉 Добро пожаловать!</b>\n\n"
-        "Ты пришёл по реферальной ссылке и получаешь <b>1 бесплатный просмотр без рекламы!</b>\n\n"
-        "Чтобы активировать бонус, подпишись на наши каналы 👇"
+        "<b>🎉 Xush kelibsiz!</b>\n\n"
+        "Siz referal havolasi orqali keldingiz.\n"
+        "Bonusni olish uchun kanalga obuna bo‘ling 👇"
     )
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="📢 Канал 1", url=CHANNEL_LINKS[0])],
-        #       [InlineKeyboardButton(text="🎬 Канал 2", url=CHANNEL_LINKS[1])],
-        [InlineKeyboardButton(text="✅ Я подписался", callback_data="check_subs_referral")]
+        [InlineKeyboardButton(text="📢 Kanal", url=CHANNEL_LINK)],
+        [InlineKeyboardButton(text="✅ Obuna bo‘ldim", callback_data="check_subs_ref")]
     ])
 
     await message.answer(text, reply_markup=keyboard)
 
 
-# Обычный /start — всегда «сброс» в главное меню
-@router.message(CommandStart())
-async def start_plain(message: Message, state: FSMContext):
-    await state.clear()
-    register_user(message.from_user.id)  # на всякий случай
-    await message.answer("🏠 Главное меню:", reply_markup=get_main_menu_keyboard())
-
-
-# /menu — быстрый вход в главное меню
-@router.message(Command("menu"))
-async def menu_cmd(message: Message, state: FSMContext):
-    await state.clear()
-    await message.answer("🏠 Главное меню:", reply_markup=get_main_menu_keyboard())
-
-
-# Проверка подписок для обычного входа
-@router.callback_query(F.data == "check_subs")
-async def check_subscriptions(callback: CallbackQuery, bot: Bot):
+@router.callback_query(F.data == "check_subs_ref")
+async def check_subscriptions_ref(callback: CallbackQuery, bot: Bot, state: FSMContext):
     user_id = callback.from_user.id
-    if await is_subscribed(bot, user_id):
-        await callback.message.edit_text(
-            "<b>Отлично, подписка подтверждена!</b>\n\n"
-            "🔍 Для поиска используй кнопки ниже или отправь в сообщении название кино.\n\n"
-            "Возникнут вопросы – нажми «Инструкция».",
-            reply_markup=get_main_menu_keyboard()
-        )
-    else:
-        await callback.answer("Вы не подписаны на все каналы 😢", show_alert=True)
 
-
-# Проверка подписок для реферального входа
-@router.callback_query(F.data == "check_subs_referral")
-async def check_subscriptions_referral(callback: CallbackQuery, bot: Bot, state: FSMContext):
-    user_id = callback.from_user.id
     if await is_subscribed(bot, user_id):
-        # Показываем раздел VIP с информацией о бонусе
         text = (
-            "👑 <b>Поздравляем!</b>\n\n"
-            "✅ Подписка подтверждена!\n"
-            "🎁 Ты получил <b>1 бесплатный просмотр без рекламы</b>!\n\n"
-            "Что это значит:\n"
-            "• При выборе любого фильма ты сможешь посмотреть его сразу, без просмотра рекламы\n"
-            "• После использования бонуса потребуется смотреть рекламу\n\n"
-            "💡 Хочешь смотреть <b>всегда без рекламы</b>?\n"
-            "Пригласи 10 друзей и получи VIP-доступ навсегда!"
+            "👑 <b>Obunangiz tasdiqlandi!</b>\n\n"
+            "🎁 Sizga 1 ta reklamasiz ko‘rish berildi.\n"
         )
-
-        me = await bot.get_me()
-        username = me.username or "YourBot"
-        ref_link = f"https://t.me/{username}?start={user_id}"
 
         kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🎁 Пригласить друзей", callback_data="vip_invite")],
-            [InlineKeyboardButton(text="💡 Как получить VIP навсегда", callback_data="vip_how")],
-            [InlineKeyboardButton(text="🎬 Начать смотреть", callback_data="back_to_menu")],
+            [InlineKeyboardButton(text="🎬 Boshlash", callback_data="back_to_menu")],
         ])
 
         await callback.message.edit_text(text, reply_markup=kb)
-        await state.clear()  # Очищаем флаг реферала
+        await state.clear()
     else:
-        await callback.answer("Вы не подписаны на все каналы 😢", show_alert=True)
+        await callback.answer("Hali obuna bo‘lmagansiz!", show_alert=True)
 
 
-# Возврат в меню по inline-кнопке
 @router.callback_query(F.data == "back_to_menu")
 async def back_to_main(callback: CallbackQuery):
-    await callback.message.answer("🏠 Главное меню:", reply_markup=get_main_menu_keyboard())
+    await callback.message.answer("🏠 Asosiy menyu:", reply_markup=get_main_menu_keyboard())
     await callback.answer()
-

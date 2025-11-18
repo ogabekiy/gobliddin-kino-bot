@@ -17,16 +17,16 @@ async def referral_share(callback: CallbackQuery, bot: Bot):
 
     # Текст поста
     post_text = (
-        "👋 Привет!\n\n"
-        "🎬 Я нашел крутого бота для просмотра фильмов и сериалов!\n\n"
-        "✨ Что внутри:\n"
-        "🎥 Огромная коллекция фильмов\n"
-        "📺 Сериалы всех жанров\n"
-        "🆓 Бесплатный просмотр\n"
-        "⚡️ Быстрая загрузка\n\n"
-        "🎁 Переходи по моей ссылке и получи бонус:\n"
+        "👋 Salom!\n\n"
+        "🎬 Men filmlar va seriallarni ko‘rish uchun zo‘r bot topdim!\n\n"
+        "✨ Ichida nimalar bor:\n"
+        "🎥 Filmlarning ulkan to‘plami\n"
+        "📺 Barcha janrdagi seriallar\n"
+        "🆓 Bepul tomosha \n"
+        "⚡️ Tez yuklash\n\n"
+        "🎁 Mening havolam orqali o‘t va bonus ol:\n"
         f"{ref_link}\n\n"
-        "P.S. За каждого друга ты и я получаем +1 бесплатный просмотр 🔥"
+        "P.S. Har bir taklif qilingan do‘st uchun sen ham, men ham +1 ta bepul ko‘rish olamiz. 🔥"
     )
 
     # URL-encoded текст для шаринга
@@ -36,31 +36,31 @@ async def referral_share(callback: CallbackQuery, bot: Bot):
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [
             InlineKeyboardButton(
-                text="📢 Поделиться в канале/группе",
+                text="📢 Kanal/Guruhda ulashish",
                 url=f"https://t.me/share/url?url={ref_link}&text={encoded_text}"
             )
         ],
         [
             InlineKeyboardButton(
-                text="💬 Отправить другу",
+                text="💬 Do‘stga yuborish",
                 url=f"https://t.me/share/url?url={ref_link}"
             )
         ],
         [
             InlineKeyboardButton(
-                text="📋 Скопировать ссылку",
+                text="📋 Havolani nusxalash",
                 callback_data=f"copy_ref:{user_id}"
             )
         ],
         [
             InlineKeyboardButton(
-                text="↩️ Назад к VIP",
+                text="↩️ VIPga qaytish",
                 callback_data="vip"
             )
         ],
         [
             InlineKeyboardButton(
-                text="🏠 Главное меню",
+                text="🏠 Asosiy menyu",
                 callback_data="back_to_menu"
             )
         ]
@@ -81,9 +81,9 @@ async def copy_ref_link(callback: CallbackQuery, bot: Bot):
     ref_link = f"https://t.me/{bot_username}?start={user_id}"
 
     await callback.message.answer(
-        f"🔗 <b>Ваша реферальная ссылка:</b>\n\n"
+        f"🔗 <b>Sizning referal havolangiz:</b>\n\n"
         f"<code>{ref_link}</code>\n\n"
-        "Нажмите на ссылку, чтобы скопировать 👆",
+        "Nusxalash uchun havolani bosing 👆",
         parse_mode="HTML"
     )
-    await callback.answer("Ссылка отправлена!")
+    await callback.answer("Havola yuborildi!")
