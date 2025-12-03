@@ -25,8 +25,26 @@ async def ask_code(callback: CallbackQuery, state: FSMContext):
 
 @router.message(MovieCode.waiting_for_code)
 async def send_movie_copy(message: Message, state: FSMContext):
+    import sqlite3
+    import time
+
     code = message.text.strip()
     await state.clear()
+
+    # 🔹 Yozuvni bazaga saqlash
+    try:
+        conn = sqlite3.connect("films.db")
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "INSERT INTO userTrackings (user_id, movie_id, date) VALUES (?, ?, ?)",
+            (message.from_user.id, int(code), int(time.time()))
+        )
+        conn.commit()
+        conn.close()
+
+    except Exception as db_err:
+        print("DB Error while tracking:", db_err)
 
     try:
         # Filmni PRIVATE_CHANNEL dan nusxalab yuboramiz
@@ -48,3 +66,4 @@ async def send_movie_copy(message: Message, state: FSMContext):
             reply_markup=get_main_menu_keyboard()
         )
         print("Error while copying message:", e)
+

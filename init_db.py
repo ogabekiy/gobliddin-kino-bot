@@ -34,6 +34,15 @@ CREATE TABLE IF NOT EXISTS favorites (
 )
 ''')
 
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS userTrackings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    movie_id INTEGER DEFAULT 0,
+    date INTEGER
+)
+''')
+
 conn.commit()
 conn.close()
 print("База инициализирована.")
